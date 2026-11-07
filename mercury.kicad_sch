@@ -1,0 +1,13 @@
+(kicad_sch
+  (version 20250114)
+  (generator "eeschema")
+  (generator_version "9.0")
+  (uuid "95779a57-7df5-4cb0-8fc8-6d1a45e3b2e0")
+  (paper "A4")
+  (title_block (title "mercury"))
+  (lib_symbols)
+  (sheet_instances
+    (path "/" (page "1"))
+  )
+  (embedded_fonts no)
+)
