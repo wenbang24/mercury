@@ -2,6 +2,7 @@
 """Export edge-constrained Specctra DSN or import SES at the keyboard widths."""
 
 import argparse
+import math
 from pathlib import Path
 
 import pcbnew
@@ -20,17 +21,30 @@ def main():
         for index, edge in enumerate(board.GetDrawings()):
             if edge.GetLayer() != pcbnew.Edge_Cuts:
                 continue
-            assert edge.GetShape() == pcbnew.SHAPE_T_SEGMENT
-            start, end = edge.GetStart(), edge.GetEnd()
-            assert start.x == end.x or start.y == end.y
-            x1, y1 = pcbnew.ToMM(start)
-            x2, y2 = pcbnew.ToMM(end)
+            start = pcbnew.ToMM(edge.GetStart())
+            end = pcbnew.ToMM(edge.GetEnd())
+            points = [start, end]
+            if edge.GetShape() == pcbnew.SHAPE_T_ARC:
+                cx, cy = pcbnew.ToMM(edge.GetCenter())
+                mid = pcbnew.ToMM(edge.GetArcMid())
+                angles = [math.atan2(y - cy, x - cx) for x, y in [start, mid, end]]
+                sweep = (angles[2] - angles[0]) % math.tau
+                if (angles[1] - angles[0]) % math.tau > sweep:
+                    sweep -= math.tau
+                radius = math.hypot(start[0] - cx, start[1] - cy)
+                steps = max(1, math.ceil(abs(sweep) * radius / .1))
+                points = [(cx + radius * math.cos(angles[0] + sweep * i / steps),
+                           cy + radius * math.sin(angles[0] + sweep * i / steps))
+                          for i in range(steps + 1)]
+                points[0], points[-1] = start, end
+            else:
+                assert edge.GetShape() == pcbnew.SHAPE_T_SEGMENT
             # DSN edge keepouts compensate for Freerouting's board-edge handling.
             for layer in ['F.Cu', 'B.Cu']:
-                coords = [min(x1, x2) - .55, min(-y1, -y2) - .55,
-                          max(x1, x2) + .55, max(-y1, -y2) + .55]
-                rect = ' '.join(str(round(value * 1000)) for value in coords)
-                keepouts.append(f'    (keepout "edge-{layer}-{index}" (rect {layer} {rect}))\n')
+                coords = ' '.join(f'{round(x * 1000)} {round(-y * 1000)}'
+                                  for x, y in points)
+                keepouts.append(f'    (keepout "edge-{layer}-{index}" '
+                                f'(path {layer} 1100 {coords}))\n')
         dsn = args.specctra.read_text()
         assert '    (rule\n' in dsn
         dsn = dsn.replace('    (rule\n', ''.join(keepouts) + '    (rule\n', 1)

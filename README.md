@@ -74,6 +74,35 @@ respective board edge. Both boards have components on one face only;
 traces and vias may use both copper layers.
 Signal tracks are 0.25 mm; BAT and GND tracks are 0.4 mm. There is no ground pour.
 
+### Layout geometry
+
+Placement and contour are adapted from [Chocofi by pashutk](https://github.com/pashutk/chocofi),
+source revision `273676d11b06785fb5a1a94860a39fc36c38baba`, licensed under the
+**CERN Open Hardware Licence v2 – Permissive (CERN-OHL-P)**; see
+[the retained licence](CHOCOfi-LICENSE.txt). Only geometry is copied: Mercury's
+schematic, electronics, footprints and routing are independent of Chocofi.
+Modified 2026-11-07: reflected the source half for the right hand, scaled X by
+17/18 (Y unchanged), refitted circular outline fillets and extended the contour
+locally for external diodes and XIAO/power parts. No source mounting holes are copied.
+
+PG1316S pitch is **17 × 17 mm**, versus Chocofi's 18 × 17 mm. From outer/pinky
+COL0 to inner/index COL4, top-row Y stagger is **0, −12, −18, −11.38, −9 mm**.
+Finger rows are 17 mm apart (the source's COL3 bottom row retains its 0.005 mm
+offset). On the right, column X positions are **137, 120, 103, 86, 69 mm**,
+and SW1 is anchored at **(137, 45) mm**. Thumb placements/rotations are:
+
+| Switch | Position X, Y (mm) | Rotation | Thumb |
+| --- | --- | --- | --- |
+| SW16 | 91.5722, 87.59 | −180° | Outer, COL2 |
+| SW17 | 72.6361, 90.18 | −165° | Middle, COL3 |
+| SW18 | 53.1806, 93.39 | 120° | Inner, COL4 |
+
+Each diode is 8.5 mm along its switch's local up direction, with matching
+rotation. U1 is at **(49.54, 40.39) mm, 0°**, USB pointing up, nominally flush
+with the controller-wing top. J1 (49.54, 61), reset SW20 (49.54, 73) and power
+SW19 (43.3, 82; 90°) occupy the wing below it; SW19's actuator faces its outer
+edge. The left board mirrors these positions without mirroring the footprints.
+
 Regenerate left placement after right-board edits: `/usr/bin/python3 scripts/make_left.py`.
 **This discards all left routing.** Nets and pad assignments are retained from
 the right board; footprint X coordinates are reflected about the outline's
@@ -95,9 +124,16 @@ mkdir -p fab/left-routing
 kicad-cli pcb drc --severity-all mercury-left.kicad_pcb
 ```
 
+To route an unrouted right board, use the same export / Java / import commands
+with `mercury.kicad_pcb` and right-specific DSN/SES filenames, then run
+`kicad-cli pcb drc --severity-all --schematic-parity mercury.kicad_pcb`.
+SES import does not rip up existing copper: remove existing tracks/vias before
+exporting when replacing a route.
+
 The ignored local `mercury-left.kicad_pro` copy supplies identical net classes
 and DRC settings. The export adds 0.55 mm edge keepouts to the DSN only; it
-supports this board's axis-aligned polygon outline. Import enforces the track
+supports straight and circular-arc edges (arcs are sampled every ≤0.1 mm for
+DSN keepouts; the board retains true arcs). Import enforces the track
 widths above, including any Freerouting neckdowns. Always check DRC after
 import: edits to placement may require manual escape/clearance repairs before
 the board is fabrication-ready. No DRC rules are relaxed by these scripts.

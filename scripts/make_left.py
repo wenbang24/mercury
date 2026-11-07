@@ -18,11 +18,14 @@ def main():
     for item in [*board.GetTracks(), *board.Zones()]:
         board.Remove(item)
     for fp in footprints:
+        pads = [(pad, pad.GetFPRelativePosition()) for pad in fp.Pads()]
         labels = [(text, text.GetPosition(), text.GetTextAngle().AsDegrees())
                   for text in [fp.Reference(), fp.Value()]]
         position = fp.GetPosition()
         fp.SetPosition(pcbnew.VECTOR2I(2 * axis - position.x, position.y))
         fp.SetOrientationDegrees(-fp.GetOrientationDegrees())
+        for pad, local_position in pads:
+            pad.SetFPRelativePosition(local_position)
         for text, position, angle in labels:
             text.SetPosition(pcbnew.VECTOR2I(2 * axis - position.x, position.y))
             text.SetTextAngle(pcbnew.EDA_ANGLE(-angle, pcbnew.DEGREES_T))
