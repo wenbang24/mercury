@@ -69,6 +69,31 @@ def assert_contained(board, footprints):
                                              pcbnew.FromMM(.001), pcbnew.ERROR_OUTSIDE, True)
         geometry.BooleanSubtract(outline)
         assert geometry.OutlineCount() == 0, f'{fp.GetReference()} protrudes beyond Edge.Cuts'
+        ref = fp.GetReference()
+        if ref.startswith('SW') and int(ref[2:]) <= 18:
+            cap = pcbnew.SHAPE_POLY_SET()
+            cap.NewOutline()
+            for x, y in rectangle(fp, 16.05, 16.25):
+                cap.Append(pcbnew.VECTOR2I(pcbnew.FromMM(x), pcbnew.FromMM(y)))
+            cap.BooleanSubtract(outline)
+            assert cap.OutlineCount() == 0, f'{ref} keycap extends beyond Edge.Cuts'
+
+
+def usb_offset(board, fp):
+    rectangles = [item for item in fp.GraphicalItems()
+                  if isinstance(item, pcbnew.PCB_SHAPE) and item.GetLayer() == pcbnew.Cmts_User
+                  and item.GetShape() == pcbnew.SHAPE_T_RECT]
+    assert rectangles
+    usb = min(rectangles, key=lambda item: min(item.GetStart().y, item.GetEnd().y))
+    x1, x2 = sorted([usb.GetStart().x, usb.GetEnd().x])
+    tip = min(usb.GetStart().y, usb.GetEnd().y)
+    edges = [item for item in board.GetDrawings() if item.GetLayer() == pcbnew.Edge_Cuts
+             and item.GetShape() == pcbnew.SHAPE_T_SEGMENT
+             and item.GetStart().y == item.GetEnd().y
+             and min(item.GetStart().x, item.GetEnd().x) <= x1
+             and max(item.GetStart().x, item.GetEnd().x) >= x2]
+    assert edges
+    return pcbnew.ToMM(min(item.GetStart().y for item in edges) - tip)
 
 
 def main():
@@ -78,10 +103,14 @@ def main():
     footprints = [{fp.GetReference(): fp for fp in board.GetFootprints()} for board in boards]
     bounds = boards[0].GetBoardEdgesBoundingBox()
     axis = bounds.GetCenter().x
+    usb_offsets = []
     for board, fps in zip(boards, footprints):
         assert len(fps) == 40
         assert all(fp.GetLayer() == pcbnew.F_Cu and not fp.IsFlipped() for fp in fps.values())
         assert_contained(board, fps.values())
+        offset = usb_offset(board, fps['U1'])
+        assert 0 <= offset <= .3, f'USB overhang {offset:.6f} mm is not within 0..0.3 mm'
+        usb_offsets.append(offset)
         for i in range(1, 19):
             diode = fps[f'D{i}']
             assert diode.GetFPID().GetLibNickname() == 'mercury'
@@ -123,6 +152,8 @@ def main():
             any(math.dist(q, (v.x, v.y)) < 150 for v in [left.GetStart(), left.GetEnd()])
             for q in reflected) for left in edges[1])
     print('PASS: both boards: all 18 diode courtyards outside every rotated 16.05 x 16.25 mm keycap + 0.5 mm margin (648 pair checks)')
+    print('PASS: both boards: full rotated 16.05 x 16.25 mm keycap areas inside Edge.Cuts')
+    print('PASS: USB tip overhang (positive = beyond PCB edge): right {:.6f} mm; left {:.6f} mm'.format(*usb_offsets))
     print('PASS: all footprints inside Edge.Cuts (pads, body and courtyards; 5 micrometre tolerance); all diodes use mercury:D_SOD-123_NoSilk with no F.SilkS graphics')
     print('PASS: 40 F.Cu footprints each, none flipped; switch coordinates/rotations and U1 unchanged; left mirrors right placement/outline, rotations and pad nets; readable labels; signal 0.25 mm / BAT-GND 0.4 mm; no zones')
     print('Board size excluding Edge.Cuts stroke: {:.3f} x {:.3f} mm'.format(

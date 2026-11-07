@@ -112,8 +112,9 @@ footprint containment and absence of diode silkscreen graphics. Reference text
 is retained in the local footprint but hidden on the assembled boards.
 The stepped column and thumb edges are straight between rounded corners, with
 the small Chocofi-derived perimeter tabs removed. U1 is at
-**(49.54, 40.39) mm, 0°**, USB pointing up, with its tip approximately 0.6 mm
-inside the straightened controller-wing top. J1 (49.54, 73.4), reset SW20 (50.5, 79.6) and power
+**(49.54, 40.39) mm, 0°**, USB pointing up and nominally flush with the local
+controller-wing edge (0.00126 mm tip overhang). A rounded diagonal transition
+to the column edge preserves keycap coverage without tabs. J1 (49.54, 73.4), reset SW20 (50.5, 79.6) and power
 SW19 (43.3, 83.5; 90°) occupy the space below the diodes; SW19's actuator faces its outer
 edge. The left board mirrors these positions without mirroring the footprints.
 
