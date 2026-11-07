@@ -97,9 +97,15 @@ and SW1 is anchored at **(137, 45) mm**. Thumb placements/rotations are:
 | SW17 | 72.6361, 90.18 | −165° | Middle, COL3 |
 | SW18 | 53.1806, 93.39 | 120° | Inner, COL4 |
 
-Each diode is 8.5 mm along its switch's local up direction, with matching
-rotation. U1 is at **(49.54, 40.39) mm, 0°**, USB pointing up, nominally flush
-with the controller-wing top. J1 (49.54, 61), reset SW20 (49.54, 73) and power
+Diodes D1–D18 form one **3-column × 6-row cluster**, all at 0°, in the locally
+widened controller wing: column X positions **33, 38.2, 43.4 mm**, row Y positions
+**55, 57.8, 60.6, 63.4, 66.2, 69 mm**, numbered row-major. Courtyard spacing is
+0.5 mm horizontally and vertically. All diode courtyards are outside every
+rotated **16.05 × 16.25 mm keycap envelope plus 0.5 mm margin on each side**.
+Run `/usr/bin/python3 scripts/check_layout.py` to verify this on both boards,
+along with unchanged switch/U1 placement, mirrored left placement and widths.
+U1 is at **(49.54, 40.39) mm, 0°**, USB pointing up, nominally flush
+with the controller-wing top. J1 (49.54, 61), reset SW20 (49.54, 74.2) and power
 SW19 (43.3, 82; 90°) occupy the wing below it; SW19's actuator faces its outer
 edge. The left board mirrors these positions without mirroring the footprints.
 
