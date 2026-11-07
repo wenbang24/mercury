@@ -1,0 +1,10 @@
+*-backups/
+*.bak
+*.lck
+fp-info-cache
+*.kicad_prl
+_autosave-*
+\#auto_saved_files\#
+fab/
+gerbers/
+~*
