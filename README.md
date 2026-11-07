@@ -6,7 +6,8 @@ Clone with submodules:
 git clone --recursive https://github.com/wenbang24/mercury.git
 ```
 
-Open `mercury.kicad_pro` in KiCad 9. The schematic and PCB are intentionally empty.
+Open `mercury.kicad_pro` in KiCad 9. The schematic describes one keyboard half;
+the PCB is still empty.
 
 ## Libraries
 
@@ -33,3 +34,34 @@ global tables for passives, diodes, and other standard parts.
 The bundled 3D model references use `${KICAD8_3RD_PARTY}` and only resolve
 if marbastlib is also installed through KiCad's Plugin and Content Manager.
 The git submodule alone provides symbols and footprints, not resolved 3D models.
+
+## Keyboard schematic
+
+One half has 18 keys: three rows of five and three thumb keys. Both halves use
+this same schematic and PCB. ROW3 uses COL2, COL3, COL4; **COL4 is innermost**.
+Switches SW1–SW15 run row-major; SW16–SW18 are the thumbs.
+
+| XIAO GPIO | nRF52840 GPIO | U1 pin | Matrix net |
+| --- | --- | --- | --- |
+| D0 | P0.02 | 1 | COL0 |
+| D1 | P0.03 | 2 | COL1 |
+| D2 | P0.28 | 3 | COL2 |
+| D3 | P0.29 | 4 | COL3 |
+| D4 | P0.04 | 5 | COL4 |
+| D5 | P0.05 | 6 | ROW0 |
+| D6 | P1.11 | 7 | ROW1 |
+| D7 | P1.12 | 14 | ROW2 |
+| D8 | P1.13 | 13 | ROW3 |
+
+The matrix is **COL2ROW**: column → switch → diode anode (pin 2) →
+diode cathode (pin 1) → row. D1–D18 are 1N4148W in SOD-123.
+XIAO D9/D10 (U1 pins 12/11), 5V, 3V3, SWDIO, SWCLK, NFC pins, and
+the unused second GND pad (22) have no-connect flags.
+
+J1 pin 1 is battery positive, through SW19 common pin 2 to throw pin 1,
+then U1 BAT+ (16). J1 pin 2 connects to BAT- (15) and GND (9).
+SW19 throw pin 3 is unused. SW20 connects RST (21) to GND.
+The library marks both GND pads as power outputs; only pad 9 is used,
+avoiding a power-output conflict without modifying the library.
+A PWR_FLAG on switched battery positive supplies ERC's BAT+ power-input check.
+The PCB is still empty; this change only implements the schematic.
