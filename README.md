@@ -28,7 +28,10 @@ global tables for passives, diodes, and other standard parts.
   - Reset pushbutton: `marbastlib-various:SW_SPST_SKQG_WithStem`.
   - Power slide switch: `marbastlib-various:SW_MSK12C02-HB`.
   - JST ACH two-pin battery connector: `marbastlib-various:CON_JST_ACH_BM02B`.
-- 1N4148W diode footprint from stock KiCad: `Diode_SMD:D_SOD-123`.
+- 1N4148W diode footprint: `mercury:D_SOD-123_NoSilk` in the project-local
+  `mercury.pretty` library. It copies KiCad's stock `Diode_SMD:D_SOD-123`,
+  removing only the F.SilkS outline graphics while retaining reference text,
+  pads, fabrication/courtyard drawings and the stock 3D model.
 
 The bundled 3D model references use `${KICAD8_3RD_PARTY}` and only resolve
 if marbastlib is also installed through KiCad's Plugin and Content Manager.
@@ -97,16 +100,19 @@ and SW1 is anchored at **(137, 45) mm**. Thumb placements/rotations are:
 | SW17 | 72.6361, 90.18 | −165° | Middle, COL3 |
 | SW18 | 53.1806, 93.39 | 120° | Inner, COL4 |
 
-Diodes D1–D18 form one **3-column × 6-row cluster**, all at 0°, in the locally
-widened controller wing: column X positions **33, 38.2, 43.4 mm**, row Y positions
-**55, 57.8, 60.6, 63.4, 66.2, 69 mm**, numbered row-major. Courtyard spacing is
+Diodes D1–D18 form one **3-column × 6-row cluster**, all at 0°, directly below
+the XIAO inside the original-width controller wing: column X positions
+**43.3, 48.5, 53.7 mm**, row Y positions
+**54.7, 57.5, 60.3, 63.1, 65.9, 68.7 mm**, numbered row-major. Courtyard spacing is
 0.5 mm horizontally and vertically. All diode courtyards are outside every
 rotated **16.05 × 16.25 mm keycap envelope plus 0.5 mm margin on each side**.
 Run `/usr/bin/python3 scripts/check_layout.py` to verify this on both boards,
-along with unchanged switch/U1 placement, mirrored left placement and widths.
+along with unchanged switch/U1 placement, mirrored left placement, widths,
+footprint containment and absence of diode silkscreen graphics. Reference text
+is retained in the local footprint but hidden on the assembled boards.
 U1 is at **(49.54, 40.39) mm, 0°**, USB pointing up, nominally flush
-with the controller-wing top. J1 (49.54, 61), reset SW20 (49.54, 74.2) and power
-SW19 (43.3, 82; 90°) occupy the wing below it; SW19's actuator faces its outer
+with the controller-wing top. J1 (49.54, 73.4), reset SW20 (50.5, 79.6) and power
+SW19 (43.3, 83.5; 90°) occupy the space below the diodes; SW19's actuator faces its outer
 edge. The left board mirrors these positions without mirroring the footprints.
 
 Regenerate left placement after right-board edits: `/usr/bin/python3 scripts/make_left.py`.

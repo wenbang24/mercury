@@ -52,6 +52,25 @@ def angle_difference(a, b):
     return abs((a - b + 180) % 360 - 180)
 
 
+def assert_contained(board, footprints):
+    outline = pcbnew.SHAPE_POLY_SET()
+    assert board.GetBoardPolygonOutlines(outline)
+    # Allow polygon approximation and the nominally flush USB edge 5 micrometres.
+    outline.Inflate(pcbnew.FromMM(.005), pcbnew.CORNER_STRATEGY_ROUND_ALL_CORNERS,
+                    pcbnew.FromMM(.001))
+    for fp in footprints:
+        geometry = pcbnew.SHAPE_POLY_SET()
+        for pad in fp.Pads():
+            pad.TransformShapeToPolygon(geometry, pcbnew.F_Cu, 0, pcbnew.FromMM(.001),
+                                        pcbnew.ERROR_OUTSIDE)
+        for item in fp.GraphicalItems():
+            if isinstance(item, pcbnew.PCB_SHAPE) and item.GetLayer() in [pcbnew.F_CrtYd, pcbnew.F_Fab]:
+                item.TransformShapeToPolygon(geometry, item.GetLayer(), 0,
+                                             pcbnew.FromMM(.001), pcbnew.ERROR_OUTSIDE, True)
+        geometry.BooleanSubtract(outline)
+        assert geometry.OutlineCount() == 0, f'{fp.GetReference()} protrudes beyond Edge.Cuts'
+
+
 def main():
     root = Path(__file__).resolve().parent.parent
     boards = [pcbnew.LoadBoard(str(root / name))
@@ -62,6 +81,13 @@ def main():
     for board, fps in zip(boards, footprints):
         assert len(fps) == 40
         assert all(fp.GetLayer() == pcbnew.F_Cu and not fp.IsFlipped() for fp in fps.values())
+        assert_contained(board, fps.values())
+        for i in range(1, 19):
+            diode = fps[f'D{i}']
+            assert diode.GetFPID().GetLibNickname() == 'mercury'
+            assert diode.GetFPID().GetLibItemName() == 'D_SOD-123_NoSilk'
+            assert not any(isinstance(item, pcbnew.PCB_SHAPE) and item.GetLayer() == pcbnew.F_SilkS
+                           for item in diode.GraphicalItems())
         caps = [rectangle(fps[f'SW{i}'], 16.05 + 1, 16.25 + 1) for i in range(1, 19)]
         diodes = [courtyard(fps[f'D{i}']) for i in range(1, 19)]
         for i, diode in enumerate(diodes, 1):
@@ -97,6 +123,7 @@ def main():
             any(math.dist(q, (v.x, v.y)) < 150 for v in [left.GetStart(), left.GetEnd()])
             for q in reflected) for left in edges[1])
     print('PASS: both boards: all 18 diode courtyards outside every rotated 16.05 x 16.25 mm keycap + 0.5 mm margin (648 pair checks)')
+    print('PASS: all footprints inside Edge.Cuts (pads, body and courtyards; 5 micrometre tolerance); all diodes use mercury:D_SOD-123_NoSilk with no F.SilkS graphics')
     print('PASS: 40 F.Cu footprints each, none flipped; switch coordinates/rotations and U1 unchanged; left mirrors right placement/outline, rotations and pad nets; readable labels; signal 0.25 mm / BAT-GND 0.4 mm; no zones')
     print('Board size excluding Edge.Cuts stroke: {:.3f} x {:.3f} mm'.format(
         *(value - .05 for value in pcbnew.ToMM(bounds.GetSize()))))
