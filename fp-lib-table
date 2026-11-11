@@ -1,5 +1,6 @@
 (fp_lib_table
   (version 7)
+  (lib (name "mercury")(type "KiCad")(uri "${KIPRJMOD}/mercury.pretty")(options "")(descr "Mercury project footprints"))
   (lib (name "marbastlib-choc")(type "KiCad")(uri "${KIPRJMOD}/libs/marbastlib/footprints/marbastlib-choc.pretty")(options "")(descr ""))
   (lib (name "marbastlib-he")(type "KiCad")(uri "${KIPRJMOD}/libs/marbastlib/footprints/marbastlib-he.pretty")(options "")(descr ""))
   (lib (name "marbastlib-hitek")(type "KiCad")(uri "${KIPRJMOD}/libs/marbastlib/footprints/marbastlib-hitek.pretty")(options "")(descr ""))
